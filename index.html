@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>body{margin:0}</style>
+<title>Datos de transferencia</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Layout: una sola tarjeta centrada en la pantalla del celular; botón principal arriba, filas con copia individual debajo */
+:root {
+  --bg: #eef2f4;
+  --card: #ffffff;
+  --fg: #14222b;
+  --muted: #5d6f7a;
+  --line: #d9e1e5;
+  --accent: #0b5f73;
+  --accent-fg: #ffffff;
+  --ok: #17794a;
+  --font-body: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "DM Mono", ui-monospace, "SF Mono", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f191f; --card: #172730; --fg: #e8f0f3; --muted: #92a6b0;
+    --line: #263a45; --accent: #4bb8d0; --accent-fg: #06222a; --ok: #5fd197;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f191f; --card: #172730; --fg: #e8f0f3; --muted: #92a6b0;
+  --line: #263a45; --accent: #4bb8d0; --accent-fg: #06222a; --ok: #5fd197;
+  color-scheme: dark;
+}
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.4;
+  padding-block: 24px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+main { max-width: 440px; margin-inline: auto; display: flex; flex-direction: column; gap: 16px; }
+h1 { font-size: 1.25rem; font-weight: 700; margin: 0; text-wrap: balance; }
+.sub { margin: 4px 0 0; color: var(--muted); font-size: 0.9rem; }
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; overflow: hidden; }
+.row { display: flex; align-items: center; gap: 12px; padding: 14px 16px; border-bottom: 1px solid var(--line); }
+.row:last-child { border-bottom: 0; }
+.txt { flex: 1; min-width: 0; }
+.lbl { font-size: 0.72rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.val { font-family: var(--font-data); font-size: 0.98rem; font-weight: 500; overflow-wrap: anywhere; margin-top: 2px; user-select: all; }
+button { font: inherit; cursor: pointer; }
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.mini { flex: none; min-width: 76px; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--line); background: transparent; color: var(--accent); font-size: 0.85rem; font-weight: 500; }
+.mini.done { color: var(--ok); border-color: var(--ok); }
+.all { width: 100%; padding: 16px; border: 0; border-radius: 12px; background: var(--accent); color: var(--accent-fg); font-size: 1.05rem; font-weight: 700; }
+.all.done { background: var(--ok); color: var(--accent-fg); }
+.hint { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 0; min-height: 1.2em; }
+@media (prefers-reduced-motion: no-preference) { button { transition: background-color .15s, color .15s, border-color .15s; } }
+</style>
+
+<main>
+  <header>
+    <h1>Datos de transferencia</h1>
+    <p class="sub">Toca el botón para copiar todo, o copia cada dato por separado.</p>
+  </header>
+
+  <button class="all" id="all" type="button">Copiar todos los datos</button>
+  <p class="hint" id="hint" role="status"></p>
+
+  <section class="card" id="list"></section>
+</main>
+
+<script>
+var DATA = [
+  ["Nombre", "Angelina Gherardelli"],
+  ["RUT", "15720297-9"],
+  ["Correo", "angelina.gherardelli@gmail.com"],
+  ["Banco", "Santander"],
+  ["Cuenta corriente", "38115499"]
+];
+var ALL_TEXT = DATA.map(function (d) { return d[0] + ": " + d[1]; }).join("\n");
+
+function fallbackCopy(text) {
+  var ta = document.createElement("textarea");
+  ta.value = text;
+  ta.setAttribute("readonly", "");
+  ta.style.position = "fixed";
+  ta.style.opacity = "0";
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  var ok = false;
+  try { ok = document.execCommand("copy"); } catch (e) {}
+  document.body.removeChild(ta);
+  return ok;
+}
+function copyText(text) {
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    return navigator.clipboard.writeText(text).then(function () { return true; }, function () { return fallbackCopy(text); });
+  }
+  return Promise.resolve(fallbackCopy(text));
+}
+var hint = document.getElementById("hint");
+function flash(btn, idleText, okText) {
+  btn.textContent = okText;
+  btn.classList.add("done");
+  setTimeout(function () { btn.textContent = idleText; btn.classList.remove("done"); }, 1800);
+}
+function report(ok, okMsg) {
+  hint.textContent = ok ? okMsg : "No se pudo copiar. Mantén presionado el texto para copiarlo.";
+  setTimeout(function () { hint.textContent = ""; }, 2500);
+}
+
+var list = document.getElementById("list");
+DATA.forEach(function (d) {
+  var row = document.createElement("div");
+  row.className = "row";
+  var txt = document.createElement("div");
+  txt.className = "txt";
+  var l = document.createElement("div"); l.className = "lbl"; l.textContent = d[0];
+  var v = document.createElement("div"); v.className = "val"; v.textContent = d[1];
+  txt.appendChild(l); txt.appendChild(v);
+  var b = document.createElement("button");
+  b.type = "button"; b.className = "mini"; b.textContent = "Copiar";
+  b.setAttribute("aria-label", "Copiar " + d[0]);
+  b.addEventListener("click", function () {
+    copyText(d[1]).then(function (ok) {
+      if (ok) flash(b, "Copiar", "Copiado");
+      report(ok, d[0] + " copiado");
+    });
+  });
+  row.appendChild(txt); row.appendChild(b);
+  list.appendChild(row);
+});
+
+var allBtn = document.getElementById("all");
+allBtn.addEventListener("click", function () {
+  copyText(ALL_TEXT).then(function (ok) {
+    if (ok) flash(allBtn, "Copiar todos los datos", "Datos copiados");
+    report(ok, "Todos los datos copiados");
+  });
+});
+</script>
+
+</html>
