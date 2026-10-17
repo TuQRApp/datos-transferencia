@@ -61,7 +61,7 @@ button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 <main>
   <header>
     <h1>Datos de transferencia</h1>
-    <p class="sub">Toca el botón para copiar todo, o copia cada dato por separado.</p>
+    <p class="sub">Toca el botón para copiar todos los datos.</p>
   </header>
 
   <button class="all" id="all" type="button">Copiar todos los datos</button>
@@ -121,16 +121,7 @@ DATA.forEach(function (d) {
   var l = document.createElement("div"); l.className = "lbl"; l.textContent = d[0];
   var v = document.createElement("div"); v.className = "val"; v.textContent = d[1];
   txt.appendChild(l); txt.appendChild(v);
-  var b = document.createElement("button");
-  b.type = "button"; b.className = "mini"; b.textContent = "Copiar";
-  b.setAttribute("aria-label", "Copiar " + d[0]);
-  b.addEventListener("click", function () {
-    copyText(d[1]).then(function (ok) {
-      if (ok) flash(b, "Copiar", "Copiado");
-      report(ok, d[0] + " copiado");
-    });
-  });
-  row.appendChild(txt); row.appendChild(b);
+  row.appendChild(txt);
   list.appendChild(row);
 });
 
